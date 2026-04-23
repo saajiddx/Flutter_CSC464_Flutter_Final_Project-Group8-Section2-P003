@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/cart_provider.dart';
+import '../../services/firestore_service.dart';
+import '../../models/order_model.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -11,44 +13,69 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _addressController = TextEditingController();
+  bool _isLoading = false;
 
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController phoneController = TextEditingController();
-  final TextEditingController addressController = TextEditingController();
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
+    super.dispose();
+  }
 
-  bool isPlacingOrder = false;
-
-  void placeOrder(BuildContext context, double total) async {
+  Future<void> _placeOrder(BuildContext context) async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() {
-      isPlacingOrder = true;
-    });
+    setState(() => _isLoading = true);
 
-    // simulate delay (later replace with Firebase order save)
-    await Future.delayed(const Duration(seconds: 2));
+    final cart = Provider.of<CartProvider>(context, listen: false);
+    final firestoreService = FirestoreService();
 
-    setState(() {
-      isPlacingOrder = false;
-    });
-
-    // success dialog
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Order Placed 🎉"),
-        content: const Text("Your order has been placed successfully!"),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
-            },
-            child: const Text("OK"),
-          )
-        ],
-      ),
+    final order = OrderModel(
+      id: '',
+      customerName: _nameController.text.trim(),
+      customerPhone: _phoneController.text.trim(),
+      customerAddress: _addressController.text.trim(),
+      items: cart.items.values.map((item) {
+        return OrderItemModel(
+          productId: item.productId,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+        );
+      }).toList(),
+      total: cart.totalAmount,
+      status: 'placed',
+      createdAt: DateTime.now(),
     );
+
+    await firestoreService.placeOrder(order);
+    cart.clearCart();
+
+    setState(() => _isLoading = false);
+
+    if (context.mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => AlertDialog(
+          title: const Text("Order Placed!"),
+          content: const Text(
+              "Your order has been placed successfully. We will contact you soon."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).popUntil((route) => route.isFirst);
+              },
+              child: const Text("Back to Home"),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   @override
@@ -57,93 +84,122 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Checkout"),
+        title: const Text("Checkout", style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.teal,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // NAME
+              const Text(
+                "Delivery Information",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+
+              // Name
               TextFormField(
-                controller: nameController,
-                decoration: const InputDecoration(
+                controller: _nameController,
+                decoration: InputDecoration(
                   labelText: "Full Name",
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) =>
-                value!.isEmpty ? "Enter your name" : null,
-              ),
-
-              const SizedBox(height: 12),
-
-              // PHONE
-              TextFormField(
-                controller: phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: "Phone Number",
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) =>
-                value!.isEmpty ? "Enter phone number" : null,
-              ),
-
-              const SizedBox(height: 12),
-
-              // ADDRESS
-              TextFormField(
-                controller: addressController,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: "Address",
-                  border: OutlineInputBorder(),
-                ),
-                validator: (value) =>
-                value!.isEmpty ? "Enter address" : null,
-              ),
-
-              const SizedBox(height: 20),
-
-              // TOTAL BOX
-              Container(
-                padding: const EdgeInsets.all(12),
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  "Total Amount: ৳ ${cart.totalAmount.toStringAsFixed(2)}",
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                  prefixIcon: const Icon(Icons.person),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
                 ),
+                validator: (value) =>
+                value!.isEmpty ? "Please enter your name" : null,
               ),
+              const SizedBox(height: 12),
 
-              const Spacer(),
+              // Phone
+              TextFormField(
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: InputDecoration(
+                  labelText: "Phone Number",
+                  prefixIcon: const Icon(Icons.phone),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                validator: (value) =>
+                value!.isEmpty ? "Please enter your phone number" : null,
+              ),
+              const SizedBox(height: 12),
 
-              // PLACE ORDER BUTTON
+              // Address
+              TextFormField(
+                controller: _addressController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  labelText: "Delivery Address",
+                  prefixIcon: const Icon(Icons.location_on),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                validator: (value) =>
+                value!.isEmpty ? "Please enter your address" : null,
+              ),
+              const SizedBox(height: 24),
+
+              // Order Summary
+              const Text(
+                "Order Summary",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 10),
+              ...cart.items.values.map((item) => ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(item.name),
+                subtitle: Text("Qty: ${item.quantity}"),
+                trailing: Text(
+                  "৳ ${(item.price * item.quantity).toStringAsFixed(2)}",
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              )),
+              const Divider(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    "Total",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    "৳ ${cart.totalAmount.toStringAsFixed(2)}",
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+
+              // Place Order Button
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.teal,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  onPressed: isPlacingOrder
-                      ? null
-                      : () => placeOrder(context, cart.totalAmount),
-                  child: isPlacingOrder
-                      ? const CircularProgressIndicator(
-                    color: Colors.white,
-                  )
+                  onPressed: _isLoading ? null : () => _placeOrder(context),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
                       : const Text(
                     "Place Order",
-                    style: TextStyle(fontSize: 18),
+                    style: TextStyle(color: Colors.white, fontSize: 16),
                   ),
                 ),
               ),
