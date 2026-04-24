@@ -25,10 +25,10 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       ),
       body: Column(
         children: [
+          // Filter Bar
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 😎,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 😎,
             child: Row(
               children: ['All', 'placed', 'delivered', 'cancelled']
                   .map((status) => Padding(
@@ -50,6 +50,8 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                   .toList(),
             ),
           ),
+
+          // Orders List
           Expanded(
             child: StreamBuilder<List<OrderModel>>(
               stream: _service.getOrders(),
@@ -57,9 +59,11 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
+
                 if (snapshot.hasError) {
                   return Center(child: Text("Error: ${snapshot.error}"));
                 }
+
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return const Center(child: Text("No orders found"));
                 }
@@ -72,8 +76,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
 
                 if (orders.isEmpty) {
                   return Center(
-                      child:
-                          Text("No '$_selectedFilter' orders found"));
+                      child: Text("No '$_selectedFilter' orders found"));
                 }
 
                 return ListView.builder(
@@ -88,14 +91,13 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                           backgroundColor: Colors.teal,
                           child: Text(
                             '${index + 1}',
-                            style:
-                                const TextStyle(color: Colors.white),
+                            style: const TextStyle(color: Colors.white),
                           ),
                         ),
                         title: Text(
                           order.customerName,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold),
+                          style:
+                              const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -112,8 +114,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                                     : order.status == 'delivered'
                                         ? Colors.green.shade100
                                         : Colors.red.shade100,
-                                borderRadius:
-                                    BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(10),
                               ),
                               child: Text(
                                 order.status.toUpperCase(),
