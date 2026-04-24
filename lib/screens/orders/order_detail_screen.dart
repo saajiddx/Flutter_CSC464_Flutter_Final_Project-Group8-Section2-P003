@@ -20,6 +20,7 @@ class OrderDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Status Badge
             Center(
               child: Container(
                 padding: const EdgeInsets.symmetric(
@@ -53,54 +54,64 @@ class OrderDetailScreen extends StatelessWidget {
                 ),
               ),
             ),
+
             const SizedBox(height: 24),
+
+            // Customer Info
             const Text(
               "Customer Information",
-              style:
-                  TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const Divider(),
             _infoRow(Icons.person, "Name", order.customerName),
             _infoRow(Icons.phone, "Phone", order.customerPhone),
-            _infoRow(
-                Icons.location_on, "Address", order.customerAddress),
+            _infoRow(Icons.location_on, "Address", order.customerAddress),
+
             const SizedBox(height: 20),
+
+            // Order Items
             const Text(
               "Order Items",
-              style:
-                  TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const Divider(),
-            ...order.items.map(
-              (item) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 😎,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(item.name,
-                          style: const TextStyle(fontSize: 14)),
-                    ),
-                    Text("x${item.quantity}",
+            ...order.items.map((item) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 😎,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          item.name,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ),
+                      Text(
+                        "x${item.quantity}",
                         style: const TextStyle(
-                            color: Colors.grey, fontSize: 14)),
-                    const SizedBox(width: 16),
-                    Text(
-                      "৳ ${(item.price * item.quantity).toStringAsFixed(2)}",
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 14),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+                            color: Colors.grey, fontSize: 14),
+                      ),
+                      const SizedBox(width: 16),
+                      Text(
+                        "৳ ${(item.price * item.quantity).toStringAsFixed(2)}",
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 14),
+                      ),
+                    ],
+                  ),
+                )),
+
             const Divider(thickness: 1.5),
+
+            // Total
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text("Total",
-                    style: TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold)),
+                const Text(
+                  "Total",
+                  style: TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
+                ),
                 Text(
                   "৳ ${order.total.toStringAsFixed(2)}",
                   style: const TextStyle(
@@ -111,12 +122,14 @@ class OrderDetailScreen extends StatelessWidget {
                 ),
               ],
             ),
+
             const SizedBox(height: 20),
+
+            // Order Date
             Center(
               child: Text(
                 "Ordered on: ${order.createdAt.day}/${order.createdAt.month}/${order.createdAt.year}  ${order.createdAt.hour}:${order.createdAt.minute.toString().padLeft(2, '0')}",
-                style:
-                    const TextStyle(color: Colors.grey, fontSize: 13),
+                style: const TextStyle(color: Colors.grey, fontSize: 13),
               ),
             ),
           ],
@@ -136,9 +149,10 @@ class OrderDetailScreen extends StatelessWidget {
           Text("$label: ",
               style: const TextStyle(color: Colors.grey)),
           Expanded(
-            child: Text(value,
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
