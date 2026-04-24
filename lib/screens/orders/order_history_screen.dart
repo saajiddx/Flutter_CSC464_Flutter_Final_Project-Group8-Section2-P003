@@ -25,14 +25,13 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       ),
       body: Column(
         children: [
-          // Filter Bar
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 😎,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(
               children: ['All', 'placed', 'delivered', 'cancelled']
                   .map((status) => Padding(
-                        padding: const EdgeInsets.only(right: 😎,
+                        padding: const EdgeInsets.only(right: 8),
                         child: ChoiceChip(
                           label: Text(status),
                           selected: _selectedFilter == status,
@@ -50,8 +49,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                   .toList(),
             ),
           ),
-
-          // Orders List
           Expanded(
             child: StreamBuilder<List<OrderModel>>(
               stream: _service.getOrders(),
@@ -59,11 +56,9 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-
                 if (snapshot.hasError) {
                   return Center(child: Text("Error: ${snapshot.error}"));
                 }
-
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return const Center(child: Text("No orders found"));
                 }
@@ -96,14 +91,12 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                         ),
                         title: Text(
                           order.customerName,
-                          style:
-                              const TextStyle(fontWeight: FontWeight.bold),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                                "৳ ${order.total.toStringAsFixed(2)} · ${order.items.length} item(s)"),
+                            Text("৳ ${order.total.toStringAsFixed(2)} · ${order.items.length} item(s)"),
                             const SizedBox(height: 2),
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -131,14 +124,12 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                             ),
                           ],
                         ),
-                        trailing: const Icon(Icons.arrow_forward_ios,
-                            size: 16),
+                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) =>
-                                  OrderDetailScreen(order: order),
+                              builder: (_) => OrderDetailScreen(order: order),
                             ),
                           );
                         },
