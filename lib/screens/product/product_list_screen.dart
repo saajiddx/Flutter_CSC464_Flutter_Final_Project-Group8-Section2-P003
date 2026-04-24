@@ -5,13 +5,14 @@ import '../../models/product_model.dart';
 import '../../providers/cart_provider.dart';
 import 'package:provider/provider.dart';
 import '../cart/cart_screen.dart';
+import '../orders/order_history_screen.dart'; // ADD THIS
 
 class ProductListScreen extends StatelessWidget {
   const ProductListScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final FirestoreService service = FirestoreService(); // ← moved here
+    final FirestoreService service = FirestoreService();
     final cartProvider = Provider.of<CartProvider>(context);
 
     return Scaffold(
@@ -22,6 +23,18 @@ class ProductListScreen extends StatelessWidget {
         ),
         backgroundColor: Colors.teal,
         actions: [
+          // ORDER HISTORY ICON - ADD THIS
+          IconButton(
+            icon: const Icon(Icons.history, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (_) => const OrderHistoryScreen()),
+              );
+            },
+          ),
+          // CART ICON
           Stack(
             children: [
               IconButton(
@@ -58,7 +71,7 @@ class ProductListScreen extends StatelessWidget {
         ],
       ),
       body: StreamBuilder<List<ProductModel>>(
-        stream: service.getProducts(), // ← updated to use local variable
+        stream: service.getProducts(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
