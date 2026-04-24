@@ -17,87 +17,139 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: const Text("Order History",
-              style: TextStyle(color: Colors.white)),
-          backgroundColor: Colors.teal,
-          iconTheme: const IconThemeData(color: Colors.white),
-        ),
-        body: Column(
-          children: [
-          // Filter Bar
+      appBar: AppBar(
+        title: const Text("Order History",
+            style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.teal,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Column(
+        children: [
           SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(
-            children: ['All', 'placed', 'delivered', 'cancelled']
-                .map((status) => Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: ChoiceChip(
-                label: Text(status),
-                selected: _selectedFilter == status,
-                selectedColor: Colors.teal,
-                labelStyle: TextStyle(
-                  color: _selectedFilter == status
-                      ? Colors.white
-                      : Colors.black,
-                ),
-                onSelected: (_) {
-                  setState(() => _selectedFilter = status);
-                },
-              ),
-            ))
-                .toList(),
+            scrollDirection: Axis.horizontal,
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 😎,
+            child: Row(
+              children: ['All', 'placed', 'delivered', 'cancelled']
+                  .map((status) => Padding(
+                        padding: const EdgeInsets.only(right: 😎,
+                        child: ChoiceChip(
+                          label: Text(status),
+                          selected: _selectedFilter == status,
+                          selectedColor: Colors.teal,
+                          labelStyle: TextStyle(
+                            color: _selectedFilter == status
+                                ? Colors.white
+                                : Colors.black,
+                          ),
+                          onSelected: (_) {
+                            setState(() => _selectedFilter = status);
+                          },
+                        ),
+                      ))
+                  .toList(),
+            ),
           ),
-        ),
-
-        // Orders List
-        Expanded(
+          Expanded(
             child: StreamBuilder<List<OrderModel>>(
-                stream: _service.getOrders(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+              stream: _service.getOrders(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text("Error: ${snapshot.error}"));
+                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text("No orders found"));
+                }
 
-                  if (snapshot.hasError) {
-                    return Center(child: Text("Error: ${snapshot.error}"));
-                  }
+                final orders = _selectedFilter == 'All'
+                    ? snapshot.data!
+                    : snapshot.data!
+                        .where((o) => o.status == _selectedFilter)
+                        .toList();
 
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text("No orders found"));
-                  }
+                if (orders.isEmpty) {
+                  return Center(
+                      child:
+                          Text("No '$_selectedFilter' orders found"));
+                }
 
-                  final orders = _selectedFilter == 'All'
-                      ? snapshot.data!
-                      : snapshot.data!
-                      .where((o) => o.status == _selectedFilter)
-                      .toList();
-
-                  if (orders.isEmpty) {
-                    return Center(
-                        child: Text("No '$_selectedFilter' orders found"));
-                  }
-
-                  return ListView.builder(
-                      itemCount: orders.length,
-                      itemBuilder: (context, index) {
-                        final order = orders[index];
-                        return Card(
-                            margin: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
-                            child: ListTile(
-                                leading: CircleAvatar(
-                                  backgroundColor: Colors.teal,
-                                  child: Text(
-                                    '${index + 1}',
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
+                return ListView.builder(
+                  itemCount: orders.length,
+                  itemBuilder: (context, index) {
+                    final order = orders[index];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.teal,
+                          child: Text(
+                            '${index + 1}',
+                            style:
+                                const TextStyle(color: Colors.white),
+                          ),
+                        ),
+                        title: Text(
+                          order.customerName,
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                                "৳ ${order.total.toStringAsFixed(2)} · ${order.items.length} item(s)"),
+                            const SizedBox(height: 2),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: order.status == 'placed'
+                                    ? Colors.orange.shade100
+                                    : order.status == 'delivered'
+                                        ? Colors.green.shade100
+                                        : Colors.red.shade100,
+                                borderRadius:
+                                    BorderRadius.circular(10),
+                              ),
+                              child: Text(
+                                order.status.toUpperCase(),
+                                style: TextStyle(
+                                  color: order.status == 'placed'
+                                      ? Colors.orange
+                                      : order.status == 'delivered'
+                                          ? Colors.green
+                                          : Colors.red,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                title: Text(
-                                  order.customerName,
-                                  style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                              ),
+                            ),
+                          ],
+                        ),
+                        trailing: const Icon(Icons.arrow_forward_ios,
+                            size: 16),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  OrderDetailScreen(order: order),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
